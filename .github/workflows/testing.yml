@@ -16,4 +16,4 @@ jobs:
       - name: Test application
         run: go test ./...
       - name: Compile application
-        run: go build
+        run: go build -o tabloid-tmp && rm -rf tabloid-tmp
