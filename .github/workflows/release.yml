@@ -19,7 +19,7 @@ jobs:
       - name: Test application
         run: go test ./...
       - name: Compile application
-        run: go build
+        run: go build -o tabloid-tmp
       - name: Release application to Github
         uses: goreleaser/goreleaser-action@v2
         with:
