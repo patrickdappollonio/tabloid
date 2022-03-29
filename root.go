@@ -26,13 +26,15 @@ var examples = []string{
 	`kubectl get pods --all-namespaces | tabloid --expr 'name =~ "^frontend" || name =~ "redis$"'`,
 }
 
+type settings struct {
+	expr     string
+	columns  []string
+	debug    bool
+	noTitles bool
+}
+
 func rootCommand(r io.Reader) *cobra.Command {
-	var (
-		expr     string
-		columns  []string
-		debug    bool
-		noTitles bool
-	)
+	var opts settings
 
 	cmd := &cobra.Command{
 		Use:           "tabloid",
@@ -43,19 +45,19 @@ func rootCommand(r io.Reader) *cobra.Command {
 		Version:       version,
 		Example:       sliceToTabulated(examples),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(r, os.Stdout, expr, columns, debug, noTitles)
+			return run(r, os.Stdout, opts)
 		},
 	}
 
-	cmd.Flags().StringVarP(&expr, "expr", "e", "", "expression to filter the output")
-	cmd.Flags().StringSliceVarP(&columns, "column", "c", []string{}, "columns to display")
-	cmd.Flags().BoolVar(&debug, "debug", false, "enable debug mode")
-	cmd.Flags().BoolVar(&noTitles, "no-titles", false, "remove column titles from the output")
+	cmd.Flags().StringVarP(&opts.expr, "expr", "e", "", "expression to filter the output")
+	cmd.Flags().StringSliceVarP(&opts.columns, "column", "c", []string{}, "columns to display")
+	cmd.Flags().BoolVar(&opts.debug, "debug", false, "enable debug mode")
+	cmd.Flags().BoolVar(&opts.noTitles, "no-titles", false, "remove column titles from the output")
 
 	return cmd
 }
 
-func run(r io.Reader, w io.Writer, expr string, columns []string, debug bool, noTitles bool) error {
+func run(r io.Reader, w io.Writer, opts settings) error {
 	var b bytes.Buffer
 
 	if _, err := io.Copy(&b, r); err != nil {
@@ -63,24 +65,24 @@ func run(r io.Reader, w io.Writer, expr string, columns []string, debug bool, no
 	}
 
 	tab := tabloid.New(&b)
-	tab.EnableDebug(debug)
+	tab.EnableDebug(opts.debug)
 
 	if err := tab.ParseColumns(); err != nil {
 		return err
 	}
 
-	if err := tab.Filter(expr); err != nil {
+	if err := tab.Filter(opts.expr); err != nil {
 		return err
 	}
 
-	data, err := tab.Select(columns)
+	data, err := tab.Select(opts.columns)
 	if err != nil {
 		return err
 	}
 
 	t := tabwriter.NewWriter(w, 0, 0, 3, ' ', 0)
 
-	if !noTitles {
+	if !opts.noTitles {
 		for _, v := range data {
 			fmt.Fprintf(t, "%s\t", v.Title)
 		}

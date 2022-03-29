@@ -11,10 +11,11 @@ func fnKey(s string) string {
 	out := make([]rune, 0, len(s))
 
 	for _, v := range s {
-		if unicode.IsLetter(v) || unicode.IsDigit(v) || v == ' ' {
-			if v == ' ' {
+		if unicode.IsLetter(v) || unicode.IsDigit(v) || v == ' ' || v == '-' {
+			switch v {
+			case ' ', '-':
 				out = append(out, '_')
-			} else {
+			default:
 				out = append(out, v)
 			}
 		}
