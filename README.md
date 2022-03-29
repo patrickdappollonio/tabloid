@@ -94,7 +94,9 @@ The column titles are always on by default, so you don't have to worry about man
 
 ### Column title normalization
 
-In order to allow query expressions, titles are normalized: any non alphanumeric characters are removed, and spaces are replaced with underscores. This convention can be used both for the query expressions as well as the column selector -- in the column selector, you can also use the original column name as well.
+In order to allow query expressions, titles are normalized: any non alphanumeric characters are removed, with the exception of `-` (dash) which is converted to underscore, and spaces are also replaced with underscores. This convention can be used both for the query expressions as well as the column selector.
+
+In the column selector, you can also use the original column name as well in both uppercase and lowercase format.
 
 An example conversion will be:
 
@@ -114,6 +116,8 @@ The `--expr` parameter allows you to specify any boolean expression. `tabloid` u
 
 The only requirement, evaluated after parsing your expression, is that the expression must evaluate to a boolean output.
 
+Mathematical operators do not work due to how the table is parsed: all values are strings.
+
 ### Cleaning up extra whitespace
 
 By default, `tabloid` will remove extra whitespace from the original output. The goal here is to provide human-readable outputs and, as seen above, `grep` or `awk` might work, but the additional whitespaces between columns are kept from the original. `tabloid` will reorganize the columns to maintain the 3-space padding between columns based on its data.
@@ -125,6 +129,7 @@ By default, all columns are shown exactly as shown by the original. However, if 
 ### Limitations
 
 * Column names must be unique.
+* Column values are always strings -- this means it's not possible to perform math comparisons yet.
 * The `--expr` parameter must be quoted depending on your terminal.
 * The input must adhere to Go's `tabwriter` using 3 or more spaces between columns minimum (this is true for both `docker` and `kubectl`).
 * Due to the previous item, column names must not contain 3+ consecutive spaces, otherwise they are treated as multiple columns.
