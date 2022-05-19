@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var rePadding = regexp.MustCompile(` {3,}`)
+var rePadding = regexp.MustCompile(` {3,}\b`)
 
 const endOfLine = -1
 
