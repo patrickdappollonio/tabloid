@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
-	github.com/spf13/cobra v1.4.0
+	github.com/spf13/cobra v1.5.0
 )
 
 require (
