@@ -30,7 +30,7 @@ type Column struct {
 func New(input *bytes.Buffer) *Tabloid {
 	return &Tabloid{
 		input:  input,
-		logger: log.New(io.Discard, "ℹ️ --> ", log.Lshortfile),
+		logger: log.New(io.Discard, "🚨 --> ", log.Lshortfile),
 	}
 }
 
