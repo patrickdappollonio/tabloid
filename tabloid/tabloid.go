@@ -3,7 +3,6 @@ package tabloid
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 )
@@ -31,7 +30,7 @@ type Column struct {
 func New(input *bytes.Buffer) *Tabloid {
 	return &Tabloid{
 		input:  input,
-		logger: log.New(ioutil.Discard, "ℹ️ --> ", log.Lshortfile),
+		logger: log.New(io.Discard, "ℹ️ --> ", log.Lshortfile),
 	}
 }
 
@@ -39,6 +38,6 @@ func (t *Tabloid) EnableDebug(debug bool) {
 	if debug {
 		t.logger.SetOutput(os.Stderr)
 	} else {
-		t.logger.SetOutput(ioutil.Discard)
+		t.logger.SetOutput(io.Discard)
 	}
 }

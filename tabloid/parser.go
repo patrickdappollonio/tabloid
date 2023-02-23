@@ -8,14 +8,6 @@ import (
 
 const endOfLine = -1
 
-type DuplicateColumnTitleError struct {
-	Title string
-}
-
-func (e *DuplicateColumnTitleError) Error() string {
-	return fmt.Sprintf("duplicate column title found: %q -- unable to work with non-unique column titles", e.Title)
-}
-
 // ParseHeading parses the heading of a tabloid table and returns a list of
 // columns with their respective start and end indexes. If it's the last column,
 // the end index is -1. It also returns an error if there are duplicate column
@@ -79,10 +71,7 @@ func (t *Tabloid) ParseColumns() ([]Column, error) {
 
 		// The first line is the header, so we use it to find the column titles
 		// the assumption here is that both target apps, kubectl and docker use
-		// a Go tabwriter with a padding of 3 spaces. So we use a regular expression
-		// to find any empty space 3+ times and we split on them. Then, we use
-		// strings.Index() to find where each column starts, we'll need it later
-		// to get the column values.
+		// a Go tabwriter with a padding of 3 spaces.
 		if rowNumber == 1 {
 			// Find the column titles
 			local, err := t.ParseHeading(line)
