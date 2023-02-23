@@ -67,15 +67,17 @@ func run(r io.Reader, w io.Writer, opts settings) error {
 	tab := tabloid.New(&b)
 	tab.EnableDebug(opts.debug)
 
-	if err := tab.ParseColumns(); err != nil {
+	cols, err := tab.ParseColumns()
+	if err != nil {
 		return err
 	}
 
-	if err := tab.Filter(opts.expr); err != nil {
+	filtered, err := tab.Filter(cols, opts.expr)
+	if err != nil {
 		return err
 	}
 
-	data, err := tab.Select(opts.columns)
+	output, err := tab.Select(filtered, opts.columns)
 	if err != nil {
 		return err
 	}
@@ -83,14 +85,14 @@ func run(r io.Reader, w io.Writer, opts settings) error {
 	t := tabwriter.NewWriter(w, 0, 0, 3, ' ', 0)
 
 	if !opts.noTitles {
-		for _, v := range data {
+		for _, v := range output {
 			fmt.Fprintf(t, "%s\t", v.Title)
 		}
 		fmt.Fprintln(t, "")
 	}
 
-	for i := 0; i < len(data[0].Values); i++ {
-		for _, v := range data {
+	for i := 0; i < len(output[0].Values); i++ {
+		for _, v := range output {
 			fmt.Fprintf(t, "%s\t", v.Values[i])
 		}
 		fmt.Fprintln(t, "")

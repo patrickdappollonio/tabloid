@@ -7,36 +7,60 @@ import (
 	"github.com/Knetic/govaluate"
 )
 
-func (t *Tabloid) Filter(expression string) error {
+func (t *Tabloid) Filter(columns []Column, expression string) ([]Column, error) {
 	expression = strings.TrimSpace(expression)
 
 	if expression == "" {
-		t.filtered = append(t.filtered, t.contents...)
-		return nil
+		t.logger.Printf("no filter expression provided, returning all rows")
+		return columns, nil
 	}
 
 	expr, err := govaluate.NewEvaluableExpression(expression)
 	if err != nil {
-		return fmt.Errorf("unable to process expression %q: %w", expression, err)
+		return nil, fmt.Errorf("unable to process expression %q: %w", expression, err)
 	}
 
-	for pos, row := range t.contents {
-		result, err := expr.Evaluate(row)
-		if err != nil {
-			return fmt.Errorf("unable to parse expression for row %d: %w", pos+1, err)
-		}
+	newColumns := make([]Column, 0, len(columns))
+	for _, column := range columns {
+		for pos := range column.Values {
+			row := make(map[string]interface{})
+			for _, column := range columns {
+				row[column.ExprTitle] = column.Values[pos]
+			}
 
-		chosen, ok := result.(bool)
-		if !ok {
-			return fmt.Errorf("%q must be a boolean expression", expression)
-		}
+			result, err := expr.Evaluate(row)
+			if err != nil {
+				return nil, fmt.Errorf("unable to evaluate expression for row %d: %w", pos+1, err)
+			}
 
-		if chosen {
-			t.filtered = append(t.filtered, row)
+			chosen, ok := result.(bool)
+			if !ok {
+				return nil, fmt.Errorf("expression %q must return a boolean value", expression)
+			}
+
+			if chosen {
+				newColumns = upsertColumn(newColumns, column, column.Values[pos])
+			}
 		}
 	}
 
-	t.logger.Printf("columns after filter: %#v", t.filtered)
+	return newColumns, nil
+}
 
-	return nil
+func upsertColumn(columns []Column, column Column, data string) []Column {
+	for pos, v := range columns {
+		if v.ExprTitle == column.ExprTitle {
+			columns[pos].Values = append(columns[pos].Values, data)
+			return columns
+		}
+	}
+
+	return append(columns, Column{
+		VisualPosition: column.VisualPosition,
+		ExprTitle:      column.ExprTitle,
+		Title:          column.Title,
+		StartIndex:     column.StartIndex,
+		EndIndex:       column.EndIndex,
+		Values:         []string{data},
+	})
 }

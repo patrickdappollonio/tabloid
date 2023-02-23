@@ -5,44 +5,61 @@ import (
 	"strings"
 )
 
-func (t *Tabloid) Select(requestedColumns []string) ([]Column, error) {
-	selected := make([]Column, 0, len(t.columns))
-
-	if len(requestedColumns) == 0 {
-		selected = append(selected, t.columns...)
-	} else {
-		for _, requested := range requestedColumns {
-			var column Column
-
-			for _, c := range t.columns {
-				if c.Title == requested || strings.ToLower(c.Title) == requested || c.ExprTitle == requested {
-					column = c
-				}
-			}
-
-			if column.Title == "" {
-				return nil, fmt.Errorf("column %q not available from the input", requested)
-			}
-
-			selected = append(selected, Column{
-				Title:      column.Title,
-				ExprTitle:  column.ExprTitle,
-				StartIndex: column.StartIndex,
-				EndIndex:   column.EndIndex,
-				Values:     column.Values,
-			})
-		}
+func (t *Tabloid) Select(columns []Column, requestedColumnNames []string) ([]Column, error) {
+	// If there are no requested columns, we return them all
+	if len(requestedColumnNames) == 0 {
+		return columns, nil
 	}
 
-	for pos, column := range selected {
-		for _, row := range t.filtered {
-			value, ok := row[column.ExprTitle]
-			if ok {
-				selected[pos].Values = append(selected[pos].Values, value.(string))
+	returnedColumns := make([]Column, 0, len(requestedColumnNames))
+	for _, v := range requestedColumnNames {
+		var column Column
+
+		for _, c := range columns {
+			if c.Title == v || strings.ToLower(c.Title) == v || c.ExprTitle == v {
+				column = c
+				break
 			}
 		}
+
+		if column.ExprTitle == "" {
+			return nil, fmt.Errorf("column %q does not exist in the input dataset", v)
+		}
+
+		returnedColumns = append(returnedColumns, column)
 	}
 
-	t.logger.Printf("columns after select: %#v", selected)
-	return selected, nil
+	return returnedColumns, nil
 }
+
+// func (t *Tabloid) Select(columns []Column, data []map[string]interface{}, requestedColumns []string) ([]map[string]interface{}, error) {
+// 	foundColumnNames := make([]string, 0, len(requestedColumns))
+
+// 	// If there are no requested columns, we return them all
+// 	for _, v := range requestedColumns {
+// 		var columnExpr string
+
+// 		for _, c := range columns {
+// 			if c.Title == v || strings.ToLower(c.Title) == v || c.ExprTitle == v {
+// 				columnExpr = c.ExprTitle
+// 				break
+// 			}
+// 		}
+
+// 		if columnExpr == "" {
+// 			return nil, fmt.Errorf("column %q does not exist in the input dataset", v)
+// 		}
+// 	}
+
+// 	for pos, column := range selectedColumns {
+// 		for _, row := range data {
+// 			value, ok := row[column.ExprTitle]
+// 			if ok {
+// 				selectedColumns[pos].Values = append(selectedColumns[pos].Values, value.(string))
+// 			}
+// 		}
+// 	}
+
+// 	t.logger.Printf("columns after select: %#v", selectedColumns)
+// 	return selectedColumns, nil
+// }
