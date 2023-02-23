@@ -1,6 +1,5 @@
 # `tabloid` -- your tabulated data's best friend
 
-[![Tests passing](https://img.shields.io/github/workflow/status/patrickdappollonio/tabloid/Testing/master?logo=github&style=flat-square)](https://github.com/patrickdappollonio/tabloid/actions)
 [![Downloads](https://img.shields.io/github/downloads/patrickdappollonio/tabloid/total?color=blue&logo=github&style=flat-square)](https://github.com/patrickdappollonio/tabloid/releases)
 
 `tabloid` is a weekend project. The goal is to be able to parse inputs from several command line applications like `kubectl` and `docker` that use a `tabwriter` to format their output: this is, they write column-based outputs where the first line is the column title -- often uppercased -- and the values come below, and they're often perfectly aligned.
