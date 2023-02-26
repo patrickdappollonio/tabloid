@@ -1,3 +1,12 @@
+# Expressions
+
+- [Expressions](#expressions)
+  - [Powerful expression evaluator](#powerful-expression-evaluator)
+  - [Expression functions](#expression-functions)
+    - [`isready`, `isnotready`](#isready-isnotready)
+    - [`hasrestarts`, `hasnorestarts`](#hasrestarts-hasnorestarts)
+    - [`olderthan`, `olderthaneq`, `newerthan`, `newerthaneq`, `eqduration`](#olderthan-olderthaneq-newerthan-newerthaneq-eqduration)
+
 ## Powerful expression evaluator
 
 The `--expr` parameter allows you to specify any boolean expression. `tabloid` uses [`govaluate`](https://github.com/Knetic/govaluate) for its expression evaluator and multiple options are supported, such as:

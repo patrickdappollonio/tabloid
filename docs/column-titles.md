@@ -1,3 +1,11 @@
+# Column Handling
+
+- [Column Handling](#column-handling)
+  - [Column titles always on by default](#column-titles-always-on-by-default)
+  - [Column title normalization](#column-title-normalization)
+  - [Column selection and reordering](#column-selection-and-reordering)
+  - [Limitations](#limitations)
+
 ## Column titles always on by default
 
 The column titles are always on by default, so you don't have to worry about manually selecting them. Want them off? Use `--no-titles`.
