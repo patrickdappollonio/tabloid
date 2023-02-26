@@ -27,10 +27,12 @@ var examples = []string{
 }
 
 type settings struct {
-	expr     string
-	columns  []string
-	debug    bool
-	noTitles bool
+	expr             string
+	columns          []string
+	debug            bool
+	noTitles         bool
+	titlesOnly       bool
+	titlesNormalized bool
 }
 
 func rootCommand(r io.Reader) *cobra.Command {
@@ -53,6 +55,8 @@ func rootCommand(r io.Reader) *cobra.Command {
 	cmd.Flags().StringSliceVarP(&opts.columns, "column", "c", []string{}, "columns to display")
 	cmd.Flags().BoolVar(&opts.debug, "debug", false, "enable debug mode")
 	cmd.Flags().BoolVar(&opts.noTitles, "no-titles", false, "remove column titles from the output")
+	cmd.Flags().BoolVar(&opts.titlesOnly, "titles-only", false, "only display column titles")
+	cmd.Flags().BoolVar(&opts.titlesNormalized, "titles-normalized", false, "normalize column titles")
 
 	return cmd
 }
@@ -72,6 +76,26 @@ func run(r io.Reader, w io.Writer, opts settings) error {
 		return err
 	}
 
+	if opts.titlesOnly {
+		if opts.expr != "" {
+			return fmt.Errorf("cannot use --expr with --titles-only")
+		}
+
+		if len(opts.columns) > 0 {
+			return fmt.Errorf("cannot use --column with --titles-only")
+		}
+
+		for _, v := range cols {
+			if opts.titlesNormalized {
+				fmt.Fprintln(w, v.ExprTitle)
+				continue
+			}
+
+			fmt.Fprintln(w, v.Title)
+		}
+		return nil
+	}
+
 	filtered, err := tab.Filter(cols, opts.expr)
 	if err != nil {
 		return err
@@ -82,10 +106,19 @@ func run(r io.Reader, w io.Writer, opts settings) error {
 		return err
 	}
 
+	if len(output) == 0 {
+		return fmt.Errorf("input had no columns to handle")
+	}
+
 	t := tabwriter.NewWriter(w, 0, 0, 3, ' ', 0)
 
 	if !opts.noTitles {
 		for _, v := range output {
+			if opts.titlesNormalized {
+				fmt.Fprintf(t, "%s\t", v.ExprTitle)
+				continue
+			}
+
 			fmt.Fprintf(t, "%s\t", v.Title)
 		}
 		fmt.Fprintln(t, "")

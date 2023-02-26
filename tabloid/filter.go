@@ -15,7 +15,7 @@ func (t *Tabloid) Filter(columns []Column, expression string) ([]Column, error) 
 		return columns, nil
 	}
 
-	expr, err := govaluate.NewEvaluableExpression(expression)
+	expr, err := govaluate.NewEvaluableExpressionWithFunctions(expression, funcs)
 	if err != nil {
 		return nil, fmt.Errorf("unable to process expression %q: %w", expression, err)
 	}
@@ -30,6 +30,7 @@ func (t *Tabloid) Filter(columns []Column, expression string) ([]Column, error) 
 
 			result, err := expr.Evaluate(row)
 			if err != nil {
+				t.logger.Printf("error type: %T", err)
 				return nil, fmt.Errorf("unable to evaluate expression for row %d: %w", pos+1, err)
 			}
 

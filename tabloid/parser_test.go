@@ -43,6 +43,11 @@ func TestTabloid_ParseHeading(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:    "duplicate column title",
+			heading: "NAME   READY   STATUS    %RESTART   AGE GAP   AGE GAP",
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
