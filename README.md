@@ -2,7 +2,7 @@
 
 [![Downloads](https://img.shields.io/github/downloads/patrickdappollonio/tabloid/total?color=blue&logo=github&style=flat-square)](https://github.com/patrickdappollonio/tabloid/releases)
 
-`tabloid` is a weekend project. The goal is to be able to parse inputs from several command line applications like `kubectl` and `docker` that use a `tabwriter` to format their output: this is, they write column-based outputs where the first line is the column title -- often uppercased -- and the values come below, and they're often perfectly aligned.
+`tabloid` is a weekend project. The goal is to be able to **parse inputs from several command line applications like `kubectl` and `docker` that use a `tabwriter` to format their output**: this is, they write column-based outputs where the first line is the column title -- often uppercased -- and the values come below, and they're often perfectly aligned.
 
 Here's an example: more often than not though, you want one field from that output instead of a tens-of-lines long output. So your first attempt is to resort to `grep`:
 
@@ -87,51 +87,9 @@ redis-leader-fb76b4755-6t5bk     team-a-apps
 
 The following features are available:
 
-### Column titles always on by default
-
-The column titles are always on by default, so you don't have to worry about manually selecting them. Want them off? Use `--no-titles`.
-
-### Column title normalization
-
-In order to allow query expressions, titles are normalized: any non alphanumeric characters are removed, with the exception of `-` (dash) which is converted to underscore, and spaces are also replaced with underscores. This convention can be used both for the query expressions as well as the column selector.
-
-In the column selector, you can also use the original column name as well in both uppercase and lowercase format.
-
-An example conversion will be:
-
-```diff
-- NAME (PROVIDED)
-+ name_provided
-```
-
-### Powerful expression evaluator
-
-The `--expr` parameter allows you to specify any boolean expression. `tabloid` uses [`govaluate`](https://github.com/Knetic/govaluate) for its expression evaluator and multiple options are supported, such as:
-
-* Grouping with parenthesis
-* `&&` and `||` operators
-* `!=`, `==`, `>`, `<`, `>=`, `<=` operators
-* And regexp-based operators such as `=~` and `!~`, based on Go's own `regexp` package
-
-The only requirement, evaluated after parsing your expression, is that the expression must evaluate to a boolean output.
-
-Mathematical operators do not work due to how the table is parsed: all values are strings.
-
-### Cleaning up extra whitespace
-
-By default, `tabloid` will remove extra whitespace from the original output. The goal here is to provide human-readable outputs and, as seen above, `grep` or `awk` might work, but the additional whitespaces between columns are kept from the original. `tabloid` will reorganize the columns to maintain the 3-space padding between columns based on its data.
-
-### Column selection and reordering
-
-By default, all columns are shown exactly as shown by the original. However, if one or more columns are provided -- either via the `--column` parameter using comma-separated values, or by repeating `--column` as many times as needed -- then only those columns are shown, in the order they are received.
-
-### Limitations
-
-* Column names must be unique.
-* Column values are always strings -- this means it's not possible to perform math comparisons yet.
-* The `--expr` parameter must be quoted depending on your terminal.
-* The input must adhere to Go's `tabwriter` using 3 or more spaces between columns minimum (this is true for both `docker` and `kubectl`).
-* Due to the previous item, column names must not contain 3+ consecutive spaces, otherwise they are treated as multiple columns.
+* [Column titles are always on by default](docs/column-titles.md#column-titles-always-on-by-default) and their titles are [normalized for querying with the expression language](docs/column-titles.md#column-title-normalization). Additionally, [columns can be reordered](docs/column-titles.md#column-selection-and-reordering).
+* There's a [powerful expression filtering](docs/expressions.md#powerful-expression-evaluator) with [several additional built-in functions](docs/expressions.md#expression-functions) to handle specific filtering (like `kubectl` durations or pod restart count).
+* Extra whitespaces (like the one that `awk` or `grep` could produce) [is removed automatically, and space count is recalculated](docs/qol-improvements.md#cleaning-up-extra-whitespace).
 
 ## Why creating this app? Isn't `enter-tool-here` enough?
 
