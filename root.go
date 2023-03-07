@@ -107,7 +107,10 @@ func run(r io.Reader, w io.Writer, opts settings) error {
 	}
 
 	if len(output) == 0 {
-		return fmt.Errorf("input had no columns to handle")
+		if b.Len() == 0 {
+			return fmt.Errorf("input had no columns to handle")
+		}
+		return fmt.Errorf("no columns matched the given criteria")
 	}
 
 	t := tabwriter.NewWriter(w, 0, 0, 3, ' ', 0)
