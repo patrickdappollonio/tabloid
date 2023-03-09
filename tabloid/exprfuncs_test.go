@@ -359,3 +359,98 @@ func TestDurations(t *testing.T) {
 		})
 	}
 }
+
+func Test_compareFirstArgumentToString(t *testing.T) {
+	type args struct {
+		str  string
+		args []interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "equal",
+			args: args{
+				str: "test",
+				args: []interface{}{
+					"test",
+				},
+			},
+			want: true,
+		},
+		{
+			name: "not equal",
+			args: args{
+				str: "test",
+				args: []interface{}{
+					"test2",
+				},
+			},
+			want: false,
+		},
+		{
+			name: "more than 1 argument",
+			args: args{
+				str: "test",
+				args: []interface{}{
+					"test",
+					"test2",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "less than 1 argument",
+			args: args{
+				str:  "test",
+				args: []interface{}{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "not a string",
+			args: args{
+				str: "test",
+				args: []interface{}{
+					1,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty string",
+			args: args{
+				str: "",
+				args: []interface{}{
+					"",
+				},
+			},
+			want: true,
+		},
+		{
+			name: "nil value",
+			args: args{
+				str: "test",
+				args: []interface{}{
+					nil,
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := compareFirstArgumentToString("testfn", tt.args.str, tt.args.args...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("compareFirstArgumentToString() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("compareFirstArgumentToString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

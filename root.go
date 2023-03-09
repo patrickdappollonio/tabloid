@@ -58,6 +58,9 @@ func rootCommand(r io.Reader) *cobra.Command {
 	cmd.Flags().BoolVar(&opts.titlesOnly, "titles-only", false, "only display column titles")
 	cmd.Flags().BoolVar(&opts.titlesNormalized, "titles-normalized", false, "normalize column titles")
 
+	cmd.MarkFlagsMutuallyExclusive("expr", "titles-only")
+	cmd.MarkFlagsMutuallyExclusive("column", "titles-only")
+
 	return cmd
 }
 
@@ -76,15 +79,11 @@ func run(r io.Reader, w io.Writer, opts settings) error {
 		return err
 	}
 
+	if len(cols) == 0 {
+		return fmt.Errorf("input had no detectable columns to handle")
+	}
+
 	if opts.titlesOnly {
-		if opts.expr != "" {
-			return fmt.Errorf("cannot use --expr with --titles-only")
-		}
-
-		if len(opts.columns) > 0 {
-			return fmt.Errorf("cannot use --column with --titles-only")
-		}
-
 		for _, v := range cols {
 			if opts.titlesNormalized {
 				fmt.Fprintln(w, v.ExprTitle)
@@ -101,13 +100,17 @@ func run(r io.Reader, w io.Writer, opts settings) error {
 		return err
 	}
 
+	if len(filtered) == 0 {
+		return fmt.Errorf("no rows matched the provided expression")
+	}
+
 	output, err := tab.Select(filtered, opts.columns)
 	if err != nil {
 		return err
 	}
 
 	if len(output) == 0 {
-		return fmt.Errorf("input had no columns to handle")
+		return fmt.Errorf("column selection matched no columns")
 	}
 
 	t := tabwriter.NewWriter(w, 0, 0, 3, ' ', 0)
