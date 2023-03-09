@@ -2,13 +2,136 @@ package tabloid
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/Knetic/govaluate"
+	"github.com/google/cel-go/cel"
+	"github.com/google/cel-go/common/types"
+	"github.com/google/cel-go/common/types/ref"
 	str2duration "github.com/xhit/go-str2duration/v2"
 )
+
+var celFunctions = []cel.EnvOption{
+	defineUnaryFunction("isready", celIsReady),
+	defineUnaryMethod("isready", celIsReady),
+
+	defineUnaryFunction("hasrestarts", celHasRestarts),
+	defineUnaryMethod("hasrestarts", celHasRestarts),
+
+	defineBinaryFunction("olderthan", celOlderThan),
+	defineBinaryMethod("olderthan", celOlderThan),
+
+	defineBinaryFunction("olderthanEq", celOlderThanEqual),
+	defineBinaryMethod("olderthanEq", celOlderThanEqual),
+
+	defineBinaryFunction("newerthan", celNewerThan),
+	defineBinaryMethod("newerthan", celNewerThan),
+
+	defineBinaryFunction("newerthanEq", celNewerThanEqual),
+	defineBinaryMethod("newerthanEq", celNewerThanEqual),
+
+	defineBinaryFunction("eqduration", celEqualDuration),
+	defineBinaryMethod("eqduration", celEqualDuration),
+}
+
+func celIsReady(val ref.Val) ref.Val {
+	v, ok := val.Value().(string)
+	if !ok {
+		return types.ValOrErr(val, "isready function only works with strings")
+	}
+
+	pieces := strings.FieldsFunc(v, func(r rune) bool {
+		return r == '/'
+	})
+
+	return types.Bool(pieces[0] == pieces[1])
+}
+
+func celHasRestarts(val ref.Val) ref.Val {
+	log.Printf("celHasRestarts: %v", val)
+	v, ok := val.Value().(string)
+	if !ok {
+		return types.ValOrErr(val, "hasrestarts function only works with strings")
+	}
+
+	pieces := strings.FieldsFunc(v, func(r rune) bool {
+		return r == '/'
+	})
+
+	return types.Bool(pieces[0] != pieces[1])
+}
+
+func celParseDurations(val1, val2 ref.Val) (time.Duration, time.Duration, error) {
+	v1, ok := val1.Value().(string)
+	if !ok {
+		return time.Duration(0), time.Duration(0), fmt.Errorf("olderthan function only accepts string arguments")
+	}
+
+	v2, ok := val2.Value().(string)
+	if !ok {
+		return time.Duration(0), time.Duration(0), fmt.Errorf("olderthan function only accepts string arguments")
+	}
+
+	d1, err := str2duration.ParseDuration(v1)
+	if err != nil {
+		return time.Duration(0), time.Duration(0), fmt.Errorf("unable to parse duration: %s", err)
+	}
+
+	d2, err := str2duration.ParseDuration(v2)
+	if err != nil {
+		return time.Duration(0), time.Duration(0), fmt.Errorf("unable to parse duration: %s", err)
+	}
+
+	return d1, d2, nil
+}
+
+func celOlderThan(val1, val2 ref.Val) ref.Val {
+	d1, d2, err := celParseDurations(val1, val2)
+	if err != nil {
+		return types.ValOrErr(val1, err.Error())
+	}
+
+	return types.Bool(d1 > d2)
+}
+
+func celOlderThanEqual(val1, val2 ref.Val) ref.Val {
+	d1, d2, err := celParseDurations(val1, val2)
+	if err != nil {
+		return types.ValOrErr(val1, err.Error())
+	}
+
+	return types.Bool(d1 >= d2)
+}
+
+func celNewerThan(val1, val2 ref.Val) ref.Val {
+	d1, d2, err := celParseDurations(val1, val2)
+	if err != nil {
+		return types.ValOrErr(val1, err.Error())
+	}
+
+	return types.Bool(d1 < d2)
+}
+
+func celNewerThanEqual(val1, val2 ref.Val) ref.Val {
+	d1, d2, err := celParseDurations(val1, val2)
+	if err != nil {
+		return types.ValOrErr(val1, err.Error())
+	}
+
+	return types.Bool(d1 <= d2)
+}
+
+func celEqualDuration(val1, val2 ref.Val) ref.Val {
+	d1, d2, err := celParseDurations(val1, val2)
+	if err != nil {
+		return types.ValOrErr(val1, err.Error())
+	}
+
+	return types.Bool(d1 == d2)
+}
 
 // isready checks if a string is in the form of <current>/<total> and if the
 // current value is equal to the total value, false otherwise.
@@ -30,11 +153,7 @@ func isready(args ...interface{}) (interface{}, error) {
 		return nil, fmt.Errorf("isready function only accepts string arguments in the form of <current>/<total>")
 	}
 
-	if pieces[0] != pieces[1] {
-		return false, nil
-	}
-
-	return true, nil
+	return pieces[0] == pieces[1], nil
 }
 
 var reRestart = regexp.MustCompile(`[1-9]\d*( \([^\)]+\))?`)

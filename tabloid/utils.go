@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"strings"
 	"unicode"
+
+	"github.com/google/cel-go/cel"
+	"github.com/google/cel-go/common/types/ref"
 )
 
 type DuplicateColumnTitleError struct {
@@ -31,4 +34,20 @@ func fnKey(s string) string {
 	}
 
 	return string(out)
+}
+
+func defineUnaryFunction(name string, unaryFn func(ref.Val) ref.Val) cel.EnvOption {
+	return cel.Function(name, cel.Overload(name+"_global_unary_string", []*cel.Type{cel.StringType}, cel.BoolType, cel.UnaryBinding(unaryFn)))
+}
+
+func defineUnaryMethod(name string, unaryFn func(ref.Val) ref.Val) cel.EnvOption {
+	return cel.Function(name, cel.MemberOverload(name+"_method_unary_string", []*cel.Type{cel.StringType}, cel.BoolType, cel.UnaryBinding(unaryFn)))
+}
+
+func defineBinaryFunction(name string, binaryFn func(ref.Val, ref.Val) ref.Val) cel.EnvOption {
+	return cel.Function(name, cel.Overload(name+"_global_binary_string_string", []*cel.Type{cel.StringType, cel.StringType}, cel.BoolType, cel.BinaryBinding(binaryFn)))
+}
+
+func defineBinaryMethod(name string, binaryFn func(ref.Val, ref.Val) ref.Val) cel.EnvOption {
+	return cel.Function(name, cel.MemberOverload(name+"_method_binary_string_string", []*cel.Type{cel.StringType, cel.StringType}, cel.BoolType, cel.BinaryBinding(binaryFn)))
 }
