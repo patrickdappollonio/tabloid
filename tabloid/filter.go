@@ -100,7 +100,7 @@ func wrapCall[T any](fn func(...interface{}) (interface{}, error), args interfac
 		var t T
 
 		if args == nil {
-			return t, fmt.Errorf("no column found to use as argument for the given function")
+			return t, fmt.Errorf("the input had no usable column that can be used in this function")
 		}
 
 		res, err := fn(args)
