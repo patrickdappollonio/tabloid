@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/xhit/go-str2duration/v2 v2.1.0
 )
 
